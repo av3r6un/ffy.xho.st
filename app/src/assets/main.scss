@@ -1,0 +1,35 @@
+@import './css/reset.css';
+@import './css/fonts.css';
+
+body {
+  background: $black;
+  color: $white;
+  font-family: $font;
+}
+body,html{
+  overscroll-behavior-y: none;
+}
+
+
+.m-icon.accent{
+  svg path,
+  svg circle,
+  svg ellipse {
+    stroke: $cyan;
+  }
+}
+.dark .m-icon{
+  svg path,
+  svg circle,
+  svg ellipse {
+    stroke: $black;
+  }
+}
+
+.accent{
+  color: $cyan;
+}
+.page{
+  max-width: 1200px;
+  margin: 0 auto;
+}

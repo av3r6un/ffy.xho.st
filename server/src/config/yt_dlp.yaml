@@ -1,0 +1,7 @@
+FLAT:
+  quiet: yes
+  extract_flat: yes
+DOWNLOAD:
+  quiet: yes
+  noplaylist: yes
+  overwrites: yes

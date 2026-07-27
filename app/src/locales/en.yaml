@@ -1,0 +1,33 @@
+index:
+  caption: Choose a video to start watching
+  action: Open a YouTube video through the Disable Ads shortcut, or paste a YouTube link below to watch it privately through the proxy.
+  tip: Share a video from YouTube and select Disable Ads.
+
+chapters:
+  title: Chapters
+
+actions:
+  share: Share
+  download: Download
+  open_video: Open video
+
+info:
+  uploaded: Uploaded
+  lang: Language
+  file_size: File Size
+  file_not_selected: Select Quality
+
+loading:
+  - Preparing your private viewing experience...
+  - Connecting to the video source...
+  - Fetching the best available quality...
+  - Leaving the distractions behind...
+  - Your video is almost ready...
+
+languages:
+  ru: Russian
+  en: English
+
+channel:
+  subscribers: '0 subscribers | {n} subscriber | {n} subscribers'
+
