@@ -3,9 +3,8 @@ const webpack = require('webpack');
 const fs = require('fs');
 const path = require('path');
 
-process.env.VUE_APP_LOCAL_HTTPS = 'true';
-
-const useLocalHttps = process.env.VUE_APP_LOCAL_HTTPS === 'true';
+const useLocalHttps = process.env.NODE_ENV !== 'production'
+  && process.env.VUE_APP_LOCAL_HTTPS === 'true';
 const https = useLocalHttps ? {
   key: fs.readFileSync(path.resolve(__dirname, 'certs/key.pem')),
   cert: fs.readFileSync(path.resolve(__dirname, 'certs/cert.pem')),
