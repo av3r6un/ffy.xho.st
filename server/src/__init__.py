@@ -7,7 +7,7 @@ import logging
 import os
 
 
-load_dotenv('.env')
+load_dotenv('server/.env')
 
 settings = Settings()
 youtube = Youtube(settings)
