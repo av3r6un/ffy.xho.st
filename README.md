@@ -61,51 +61,46 @@ port with `PUBLIC_PORT`.
 
 ## Automated deployment
 
-The workflow `.github/workflows/deploy.yml` runs checks, publishes immutable
-commit and `latest` tags to Docker Hub, copies `docker-compose.yml` to the VPS,
-pulls the commit-tagged image and starts it with Docker Compose.
+The workflow `.github/workflows/ci-pr.yml` builds and tests the production
+container for every non-`master` push. After CI succeeds, it creates, merges and
+closes a pull request into `master`, then deletes the source branch.
 
-Create these GitHub repository secrets:
+The workflow `.github/workflows/deploy.yml` runs only for `master`, publishes a
+versioned and `latest` image to Docker Hub, copies `docker-compose.yml` to the
+VPS, pulls the versioned image and starts it with Docker Compose.
+
+Create a GitHub Environment named `deploy`, then add these environment secrets:
 
 | Secret | Value |
 | --- | --- |
+| `AUTOMATION_TOKEN` | Fine-grained PAT allowed to create/merge PRs, delete branches and trigger workflows |
 | `DOCKERHUB_USERNAME` | Docker Hub username |
 | `DOCKERHUB_TOKEN` | Docker Hub access token with push/pull access |
-| `VPS_HOST` | VPS hostname or IP address |
-| `VPS_PORT` | SSH port; use `22` when unchanged |
-| `VPS_USER` | SSH user allowed to run Docker |
-| `VPS_SSH_KEY` | Private SSH key for that user |
-| `VPS_KNOWN_HOSTS` | Verified `known_hosts` entry for the VPS |
-| `VPS_DEPLOY_PATH` | Absolute deployment directory, for example `/opt/mediavault` |
+| `DEPLOY_HOST` | VPS hostname or IP address |
+| `DEPLOY_PORT` | SSH port; use `22` when unchanged |
+| `DEPLOY_USER` | SSH user allowed to run Docker |
+| `DEPLOY_SSH_KEY` | Private SSH key for that user |
+| `DEPLOY_PATH` | Existing absolute deployment directory, for example `/opt/mediavault` |
+| `DEPLOY_ENV_FILE` | Optional application environment values written to the VPS `.env` |
 
 Optionally set repository variable `DOCKER_IMAGE_NAME`; it defaults to
 `mediavault`.
 
-The VPS must have Docker Engine with the Compose plugin installed. The SSH user
-must be able to create the deployment directory and use Docker without an
-interactive `sudo` prompt. Add the public half of `VPS_SSH_KEY` to the user's
-`~/.ssh/authorized_keys`.
-
-Generate `VPS_KNOWN_HOSTS` from a trusted machine and verify the fingerprint
-against your hosting provider before saving it:
-
-```sh
-ssh-keyscan -p 22 your-vps.example.com
-```
+The VPS must have Docker Engine with the Compose plugin installed. Create
+`DEPLOY_PATH` before the first run. The SSH user must be able to write there and
+use Docker without an interactive `sudo` prompt. Add the public half of
+`DEPLOY_SSH_KEY` to the user's `~/.ssh/authorized_keys`.
 
 The branch workflow is:
 
-1. Push development commits to `changes`.
-2. GitHub Actions runs frontend and backend checks.
-3. After successful checks, the workflow opens a `changes` → `master` pull
-   request if one is not already open.
-4. Pull requests targeting `master` run the same checks.
-5. A merge or direct push to `master` publishes the Docker image and deploys
-   it to the VPS.
+1. Push development commits to any branch except `master`.
+2. GitHub Actions builds the production image and runs tests inside it.
+3. After successful checks, the workflow creates or reuses a PR into `master`.
+4. The workflow merges the PR with `AUTOMATION_TOKEN` and deletes its branch.
+5. The resulting push to `master` publishes the image and deploys it to the VPS.
 
 Manual workflow dispatch deploys only when it is started from `master`.
 
-In repository **Settings → Actions → General → Workflow permissions**, enable
-**Allow GitHub Actions to create and approve pull requests** so the workflow can
-open the automatic `changes` → `master` pull request. Protect `master` and
-require the `test` job before merging.
+If the `deploy` environment has required reviewers, both automatic PR merging
+and deployment will wait for environment approval. Do not add required reviewers
+if the flow must be completely automatic.

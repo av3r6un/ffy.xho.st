@@ -1,195 +1,119 @@
-name: Build and deploy
+name: Deploy
 
 on:
-  pull_request:
-    branches:
-      - master
   push:
     branches:
       - master
-      - changes
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-production
+  cancel-in-progress: false
 
 env:
-  IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME || 'mediavault' }}
+  IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME }}
 
 jobs:
-  test:
+  build-push-and-deploy:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: deploy
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: app/package-lock.json
+          fetch-depth: 0
 
-      - name: Install frontend dependencies
-        run: npm ci
-        working-directory: app
+      - name: Calculate Version
+        shell: bash
+        run: |
+          set -euo pipefail
+          merge_count="$(git rev-list --count --merges HEAD)"
+          version="0.1.${merge_count}"
+          build_time="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          short_sha="$(git rev-parse --short HEAD)"
 
-      - name: Lint frontend
-        run: npm run lint
-        working-directory: app
+          echo "APP_VERSION=${version}" >> "${GITHUB_ENV}"
+          echo "APP_BUILD_TIME=${build_time}" >> "${GITHUB_ENV}"
+          echo "APP_GIT_SHA=${short_sha}" >> "${GITHUB_ENV}"
+          echo "IMAGE_TAG=${version}" >> "${GITHUB_ENV}"
 
-      - name: Build frontend
-        run: npm run build
-        working-directory: app
+          echo "Deploy version: ${version} (${short_sha})"
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-
-      - name: Install backend
-        run: pip install .
-        working-directory: server
-
-      - name: Test backend
-        run: python -m unittest discover -s tests -v
-        working-directory: server
-
-  publish:
-    if: >-
-      github.ref == 'refs/heads/master' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Set up Docker Buildx
+      - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Log in to Docker Hub
+      - name: Log In To Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Build And Push Image
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
           tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.version=${{ env.APP_VERSION }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ env.APP_BUILD_TIME }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    needs: publish
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Configure SSH
+      - name: Prepare Deployment Environment
+        shell: bash
         env:
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          DEPLOY_ENV_FILE: ${{ secrets.DEPLOY_ENV_FILE }}
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
         run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+          set -euo pipefail
+          printf '%s\n' "$DEPLOY_ENV_FILE" > deployment.env
+          {
+            printf 'DOCKER_IMAGE=%s\n' "$DOCKER_IMAGE"
+            printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG"
+            printf 'APP_VERSION=%s\n' "$APP_VERSION"
+            printf 'APP_BUILD_TIME=%s\n' "$APP_BUILD_TIME"
+            printf 'APP_GIT_SHA=%s\n' "$APP_GIT_SHA"
+          } >> deployment.env
 
-      - name: Copy Compose file
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          scp -P "${VPS_PORT:-22}" docker-compose.yml \
-            "${VPS_USER}@${VPS_HOST}:docker-compose.yml.tmp"
+      - name: Copy Deployment Files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: docker-compose.yml,deployment.env
+          target: ${{ secrets.VPS_DEPLOY_PATH }}
 
-      - name: Pull and start release
+      - name: Deploy On Server
+        uses: appleboy/ssh-action@v1.2.0
         env:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          case "$DOCKERHUB_USERNAME" in
-            *[!A-Za-z0-9_-]*|'') echo "Invalid Docker Hub username"; exit 1 ;;
-          esac
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: DOCKERHUB_TOKEN,DOCKERHUB_USERNAME
+          script: |
+            set -eu
+            cd "${{ secrets.VPS_DEPLOY_PATH }}"
+            mv deployment.env .env
+            chmod 600 .env
 
-          SSH_TARGET="${VPS_USER}@${VPS_HOST}"
-          SSH_PORT="${VPS_PORT:-22}"
-          IMAGE="${DOCKERHUB_USERNAME}/${IMAGE_NAME}"
+            printf '%s' "$DOCKERHUB_TOKEN" | \
+              docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
-          printf '%s' "$DOCKERHUB_TOKEN" | \
-            ssh -p "$SSH_PORT" "$SSH_TARGET" \
-              "docker login -u '$DOCKERHUB_USERNAME' --password-stdin"
-
-          ssh -p "$SSH_PORT" "$SSH_TARGET" bash -s -- \
-            "$VPS_DEPLOY_PATH" "$IMAGE" "${{ github.sha }}" <<'REMOTE'
-          set -euo pipefail
-          deploy_path="$1"
-          image="$2"
-          image_tag="$3"
-
-          install -d "$deploy_path"
-          mv "$HOME/docker-compose.yml.tmp" "$deploy_path/docker-compose.yml"
-          cd "$deploy_path"
-
-          {
-            printf 'DOCKER_IMAGE=%s\n' "$image"
-            printf 'IMAGE_TAG=%s\n' "$image_tag"
-          } > .env
-          chmod 600 .env
-
-          docker compose config --quiet
-          docker compose pull
-          docker compose up -d --remove-orphans --wait --wait-timeout 120
-          REMOTE
-
-  open-pull-request:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/changes'
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Open pull request to master
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          open_pr_count="$(
-            gh pr list \
-              --head changes \
-              --base master \
-              --state open \
-              --json number \
-              --jq 'length'
-          )"
-
-          if [ "$open_pr_count" -eq 0 ]; then
-            gh pr create \
-              --head changes \
-              --base master \
-              --title "Merge changes into master" \
-              --body "Automated pull request created after successful CI checks on the changes branch."
-          else
-            echo "An open changes -> master pull request already exists."
-          fi
+            docker compose config --quiet
+            docker compose pull
+            docker compose up -d --remove-orphans --wait --wait-timeout 120
