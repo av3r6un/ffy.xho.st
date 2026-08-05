@@ -12,7 +12,7 @@ services:
       AUTH_UPSTREAM_URL: "${AUTH_UPSTREAM_URL:-https://id.xho.st}"
       PLAYBACK_SECRET: "${PLAYBACK_SECRET:?Set PLAYBACK_SECRET}"
       SECRET_KEY: "${SECRET_KEY:?Set SECRET_KEY}"
-      DB_URL: "${DB_URL:-sqlite+aiosqlite://./server/app.db}"
+      DB_URL: "${DB_URL:-sqlite+aiosqlite:///./server/app.db}"
     healthcheck:
       test:
         - CMD
