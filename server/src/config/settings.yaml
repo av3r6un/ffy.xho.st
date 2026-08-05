@@ -1,4 +1,1 @@
-NOT_SECURED_PATHS:
-  - /health
-  - /proxy
 AUTH_SERVER: auth.xho.st

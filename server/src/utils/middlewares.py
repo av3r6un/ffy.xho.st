@@ -73,14 +73,12 @@ async def response_middleware(req: Request, handler, *args, **kwargs):
 @middleware
 async def jwt_middleware(req: Request, handler, *args, **kwargs):
   from src.models import User
-  from src import settings
-
   route_error = getattr(req.match_info, 'http_exception', None)
   if isinstance(route_error, HTTPNotFound):
     raise route_error
   
   session = req['session']
-  if req.path.startswith(tuple(settings.NOT_SECURED_PATHS)):
+  if not req.path.startswith('/api/'):
     return await handler(req, session=session)
   
   auth_header = req.headers.get('Authorization')
