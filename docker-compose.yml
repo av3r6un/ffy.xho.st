@@ -7,9 +7,12 @@ services:
       - "${PUBLIC_PORT:-8090}:8090"
     environment:
       APP_PORT: "8090"
-      YT_DLP_CONF: "yt_dlp.yaml"
-      DEFAULT_AUDIO_ID: "${DEFAULT_AUDIO_ID:-251}"
+      GENERAL_CONF: "settings.yaml,yt_dlp.yaml"
+      DEFAULT_AUDIO_ID: "${DEFAULT_AUDIO_ID:-139}"
       AUTH_UPSTREAM_URL: "${AUTH_UPSTREAM_URL:-https://id.xho.st}"
+      PLAYBACK_SECRET: "${PLAYBACK_SECRET:?Set PLAYBACK_SECRET}"
+      SECRET_KEY: "${SECRET_KEY:?Set SECRET_KEY}"
+      DB_URL: "${DB_URL:-sqlite+aiosqlite:///./server/app.db}"
     healthcheck:
       test:
         - CMD

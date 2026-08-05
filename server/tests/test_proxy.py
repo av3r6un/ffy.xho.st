@@ -1,6 +1,6 @@
 import unittest
 
-from src.routes.proxy import _parse_segment_ranges
+from src.services.proxy import _parse_segment_ranges
 
 
 def mp4_box(box_type: bytes, payload: bytes) -> bytes:

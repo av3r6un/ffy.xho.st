@@ -7,16 +7,27 @@ import logging
 import os
 
 
-load_dotenv('server/.env')
-
 settings = Settings()
+
+load_dotenv((settings.ROOT / '..' / '.env').resolve())
+
 youtube = Youtube(settings)
+
+async def db_ctx(app: Application):
+  from .utils.engine import session_maker, dispose
+  app['db_sessionmaker'] = session_maker
+  yield
+  await dispose()
 
 def create_app():
   from .routes import routes
-  from .routes.proxy import setup_proxy
+  from .services import ProxyService, SessionService, StartupService
+  settings.load_settings()
   app = Application(middlewares=middlewares)
-  setup_proxy(app)
+  app.cleanup_ctx.append(db_ctx)
+  ProxyService.setup(app)
+  SessionService.setup(app)
+  StartupService.setup(app)
   logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] WEB: %(message)s",

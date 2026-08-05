@@ -7,7 +7,7 @@ main = RouteTableDef()
 
 
 @main.get('/api/v/{id}')
-async def watch(req: Request):
+async def watch(req: Request, session, *args, **kwargs):
   from src import youtube
   id = req.match_info.get('id') or req.query.get('v')
   if not id:
@@ -17,12 +17,12 @@ async def watch(req: Request):
 
 
 @main.get('/health')
-async def health(_: Request):
+async def health(_: Request, *args, **kwargs):
   return {'service': 'mediavault', 'status': 'ok'}
 
 
 @main.get('/{path:.*}')
-async def static_app(req: Request):
+async def static_app(req: Request, *args, **kwargs):
   first_segment = req.match_info.get('path', '').partition('/')[0]
   if first_segment in {'api', 'auth', 'proxy', 'health'}:
     raise web.HTTPNotFound(text='Route not found')

@@ -32,6 +32,13 @@ class Backend {
       .then((resp) => this.manageResp(resp))
       .catch((err) => this.manageError(err));
   }
+
+  async post(url, data) {
+    return api
+      .post(url, data)
+      .then((resp) => this.manageResp(resp))
+      .catch((err) => this.manageError(err));
+  }
 }
 
 export default Backend;

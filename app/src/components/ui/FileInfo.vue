@@ -4,13 +4,13 @@
       <div class="file_info-title">{{ $t('info.uploaded') }}</div>
       <div class="file_info-caption">{{ $d(localValue.uploaded * 1000, 'short') }}</div>
     </div>
-    <div class="file_info-item lang">
+    <div class="file_info-item lang" v-if="localValue.language">
       <div class="file_info-title">{{ $t('info.lang') }}</div>
       <div class="file_info-caption">{{ language }}</div>
     </div>
-    <div class="file_info-item size" v-show="false">
+    <div class="file_info-item size" v-if="localValue.fileSize">
       <div class="file_info-title">{{ $t('info.file_size') }}</div>
-      <div class="file_info-caption">{{ localValue.file_size || $t('info.file_not_selected')}}</div>
+      <div class="file_info-caption">{{ localValue.fileSize || $t('info.file_not_selected')}}</div>
     </div>
   </div>
 </template>
