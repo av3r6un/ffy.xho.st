@@ -46,27 +46,28 @@ jobs:
 
       - name: Check Python Version
         run: |
-          docker run --rm "mediavault-ci:${GITHUB_SHA}" \
-            python -c "import sys; assert sys.version_info >= (3, 14); print(sys.version)"
+          docker run --rm --entrypoint python "mediavault-ci:${GITHUB_SHA}" \
+            -c "import sys; assert sys.version_info >= (3, 14); print(sys.version)"
 
       - name: Compile Sources
         run: |
-          docker run --rm "mediavault-ci:${GITHUB_SHA}" \
-            python -m compileall -q src main.py
+          docker run --rm --entrypoint python "mediavault-ci:${GITHUB_SHA}" \
+            -m compileall -q src main.py
 
       - name: Run Backend Tests
         run: |
           docker run --rm \
+            --entrypoint sh \
             -e DB_URL="sqlite+aiosqlite:////tmp/mediavault-ci.db" \
             -e PLAYBACK_SECRET="ci-playback-secret-at-least-32-characters" \
             "mediavault-ci:${GITHUB_SHA}" \
-            sh -c 'alembic -c alembic.ini upgrade head &&
+            -c 'alembic -c alembic.ini upgrade head &&
               python -m unittest discover -s tests -v'
 
       - name: Verify Built Frontend
         run: |
-          docker run --rm "mediavault-ci:${GITHUB_SHA}" \
-            python -c "from pathlib import Path; assert Path('static/index.html').is_file(); print('frontend build ok')"
+          docker run --rm --entrypoint python "mediavault-ci:${GITHUB_SHA}" \
+            -c "from pathlib import Path; assert Path('static/index.html').is_file(); print('frontend build ok')"
 
   create-and-merge-pr:
     if: github.event_name == 'push' && github.ref != 'refs/heads/master'

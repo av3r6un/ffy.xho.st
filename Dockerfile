@@ -26,9 +26,11 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY server/ ./
 COPY --from=frontend /build/app/dist ./static
+COPY entrypoint.sh ./entrypoint.sh
 
 RUN addgroup --system mediavault \
     && adduser --system --ingroup mediavault mediavault \
+    && chmod +x /opt/mediavault/entrypoint.sh \
     && chown -R mediavault:mediavault /opt/mediavault
 
 USER mediavault
@@ -38,4 +40,4 @@ EXPOSE 8090
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=3)"
 
-CMD ["python", "main.py"]
+ENTRYPOINT ["/opt/mediavault/entrypoint.sh"]
