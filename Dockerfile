@@ -14,8 +14,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/mediavault/.venv/bin:$PATH" \
     APP_PORT=8090 \
-    YT_DLP_CONF=yt_dlp.yaml \
-    DEFAULT_AUDIO_ID=251 \
+    GENERAL_CONF=settings.yaml,yt_dlp.yaml \
+    DEFAULT_AUDIO_ID=139 \
     MEDIAVAULT_STATIC_DIR=/opt/mediavault/static
 
 WORKDIR /opt/mediavault

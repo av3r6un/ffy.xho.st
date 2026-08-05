@@ -29,8 +29,8 @@ export default {
   },
   methods: {
     normalTime(secs) {
-      const hours = secs / 3600;
-      const minutes = secs / 60;
+      const hours = Math.floor(secs / 3600);
+      const minutes = Math.floor(secs / 60);
       const seconds = secs % 60;
       return hours >= 1
         ? `${hours.toFixed().padStart(2, '0')}:${minutes.toFixed().padStart(2, '0')}:${seconds.toFixed().padStart(2, '0')}`

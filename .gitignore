@@ -44,3 +44,4 @@ server/src/downloads/
 
 # OS files
 .DS_Store
+*.db

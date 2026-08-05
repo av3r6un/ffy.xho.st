@@ -1,47 +1,35 @@
 <template>
   <form class="form" @submit.prevent="parseLink">
-    <Input type="text" v-model="indexLink" class="accent" required @change="parseLink" />
+    <Input type="text" v-model="indexLink" class="accent" required />
     <Button icon="clipboard" classes="accent small cube dark" @click="pasteClipboard" />
   </form>
 </template>
 <script>
 import Input from './ui/Input.vue';
 import Button from './ui/Button.vue';
+import Backend from '../services/backend.service';
 
 export default {
   name: 'IndexForm',
   components: { Input, Button },
   data() {
     return {
+      backend: new Backend(),
       indexLink: '',
     };
   },
   methods: {
-    getVideoId(value) {
-      const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
-      try {
-        const url = new URL(
-          /^https?:\/\//i.test(value) ? value : `https://${value}`,
-        );
-        const host = url.hostname.replace(/^www\./, '');
-        let videoId = null;
-
-        if (host === 'youtu.be') {
-          [videoId] = url.pathname.slice(1).split('/');
-        } else if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
-          videoId = url.searchParams.get('v')
-            || url.pathname.match(/^\/(?:shorts|live|embed)\/([^/]+)/)?.[1];
-        }
-
-        return VIDEO_ID_PATTERN.test(videoId) ? videoId : null;
-      } catch {
-        return null;
-      }
-    },
-    parseLink() {
-      const videoId = this.getVideoId(this.indexLink.trim());
-      if (videoId) {
-        this.$router.push({ path: '/watch', query: { v: videoId } });
+    async parseLink() {
+      const videoUrl = this.indexLink.trim();
+      if (!videoUrl) return;
+      const videoSession = await this.backend.post('/sessions', {
+        video_url: videoUrl,
+      });
+      if (videoSession?.uid) {
+        this.$router.push({
+          path: '/watch',
+          query: { session: videoSession.uid },
+        });
       }
     },
     async pasteClipboard() {
