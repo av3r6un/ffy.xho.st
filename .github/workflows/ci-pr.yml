@@ -56,8 +56,12 @@ jobs:
 
       - name: Run Backend Tests
         run: |
-          docker run --rm "mediavault-ci:${GITHUB_SHA}" \
-            python -m unittest discover -s tests -v
+          docker run --rm \
+            -e DB_URL="sqlite+aiosqlite:////tmp/mediavault-ci.db" \
+            -e PLAYBACK_SECRET="ci-playback-secret-at-least-32-characters" \
+            "mediavault-ci:${GITHUB_SHA}" \
+            sh -c 'alembic -c alembic.ini upgrade head &&
+              python -m unittest discover -s tests -v'
 
       - name: Verify Built Frontend
         run: |
