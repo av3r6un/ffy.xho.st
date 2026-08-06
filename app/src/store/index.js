@@ -55,24 +55,28 @@ export default createStore({
   },
   actions: {
     async login({ commit }, creds) {
+      commit('setLoading', true);
       return Auth.login(creds)
         .then(({ body, status }) => {
           commit('setTokens', body.access_token, body.refresh_token, body.expires_at);
           commit('setUser', { email: body.email, uid: body.uid });
           return status;
         })
-        .catch((err) => err);
+        .catch((err) => err)
+        .finally(() => commit('setLoading', false));
     },
     async register(_, payload) {
       await Auth.register(payload);
     },
     async refresh({ state, commit }) {
+      commit('setLoading', true);
       return Auth.refresh(state.refreshToken)
         .then((body) => {
           commit('setTokens', body);
           state.isAuth = true;
           return body.token;
-        });
+        })
+        .finally(() => commit('setLoading', false));
     },
     async logout({ commit }) {
       commit('clearSession');

@@ -20,7 +20,7 @@ export default {
 </script>
 <style lang="scss" scoped>
 .header{
-  padding: 10px 30px;
+  padding: 30px;
   &_logo{
     display: flex;
     .logo{

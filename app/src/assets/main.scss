@@ -41,3 +41,27 @@ body,html{
     object-fit: contain;
   }
 }
+
+.btn{
+  &_submit{
+    height: 30px;
+    border-radius: 8px;
+    width: 100%;
+    background: $cyan;
+    color: $black;
+    font-size: 16px;
+    font-family: $font;
+    line-height: 12px;
+  }
+}
+
+.input_wide{
+  height: 30px;
+  border-radius: 8px;
+  width: 100%;
+  background: $black;
+  border: 1px solid rgba($white, .3);
+  padding: 0 12px;
+  font-family: $font;
+  font-size: 14px;
+}
