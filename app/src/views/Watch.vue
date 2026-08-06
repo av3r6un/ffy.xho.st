@@ -16,7 +16,7 @@
         @action-requested="completeAction" />
     </div>
     <div class="watch_loading" v-else-if="!info && !error">
-      <Loading />
+      <Loading show-phrases />
     </div>
     <div class="watch_error" v-else-if="error">
       <div class="watch_error-card">

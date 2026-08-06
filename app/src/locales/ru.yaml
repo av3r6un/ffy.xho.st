@@ -24,6 +24,11 @@ loading:
   - Убираем рекламу и лишний шум позади...
   - Ваше видео уже почти готово...
 
+pull_refresh:
+  pull: Потяните, чтобы обновить
+  release: Отпустите для обновления
+  refreshing: Обновляем...
+
 languages:
   ru: Russian
   en: English

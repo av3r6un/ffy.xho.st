@@ -24,10 +24,14 @@ loading:
   - Leaving the distractions behind...
   - Your video is almost ready...
 
+pull_refresh:
+  pull: Pull to refresh
+  release: Release to refresh
+  refreshing: Refreshing...
+
 languages:
   ru: Russian
   en: English
 
 channel:
   subscribers: '0 subscribers | {n} subscriber | {n} subscribers'
-

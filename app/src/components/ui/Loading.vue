@@ -51,6 +51,12 @@ export default {
   justify-content: center;
   gap: 28px;
   text-align: center;
+  &.hidden {
+    min-height: auto;
+    .loading_phrases{
+      min-height: auto;
+    }
+  }
   .spinner{
     width: 64px;
     height: 64px;

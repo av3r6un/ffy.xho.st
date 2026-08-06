@@ -41,6 +41,7 @@ export default {
   &_title{
     font-size: 24px;
     font-weight: 600;
+    text-align: center;
   }
   &_form{
     display: flex;
