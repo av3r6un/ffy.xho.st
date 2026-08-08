@@ -11,14 +11,6 @@ import logging
 import os
 
 
-def _log_shortcut_response(req: Request, payload: dict, status: int = 200) -> None:
-  if (
-    req.path == '/shortcut/sessions'
-    and os.getenv('DEBUG', '').strip().lower() in {'1', 'true', 'yes', 'on'}
-  ):
-    logging.info('Shortcut response HTTP %s: %s', status, payload)
-
-
 @middleware
 async def db_middleware(req: Request, handler, *args, **kwargs):
   session_factory: async_sessionmaker[AsyncSession] = req.app['db_sessionmaker']
@@ -71,17 +63,14 @@ async def response_middleware(req: Request, handler, *args, **kwargs):
       payload = dict(status='success', body=body, message=message)
     else:
       payload = dict(status='success', body=result)
-    _log_shortcut_response(req, payload)
     return json_response(payload)
   except JSRError as e:
-    _log_shortcut_response(req, e.json['data'], e.status)
     return json_response(**e.json)
   except HTTPException:
     raise
   except Exception as ex:
     logging.exception('Unhandled request error')
     payload = dict(status='error', message=str(ex))
-    _log_shortcut_response(req, payload, 500)
     return json_response(payload, status=500)
 
 
