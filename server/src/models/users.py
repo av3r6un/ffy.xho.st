@@ -9,6 +9,7 @@ class User(Base):
   
   uid: Mapped[str] = mapped_column(String(6), primary_key=True)
   email: Mapped[str] = mapped_column(String(100), nullable=True, unique=True)
+  language: Mapped[str] = mapped_column(String(2), nullable=False, default='en', server_default='en')
   last_seen_at: Mapped[dt] = mapped_column(DateTime, nullable=False, default=func.now())
   
   def __init__(self, uid, **kwargs) -> None:

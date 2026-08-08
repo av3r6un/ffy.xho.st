@@ -12,25 +12,52 @@
       <Icon name="share-icon" class="accent" />
       {{ $t('index.tip') }}
     </div>
+    <Button @click="openModal" icon="apple-shortcuts"
+      text="actions.make_shortcut" classes="accent" v-if="runsAsPWA" />
+    <RequestPermissionModal v-model="rpmModalState" v-if="runsAsPWA" />
   </article>
 </template>
 
 <script>
 import IndexForm from '../components/IndexForm.vue';
 import Icon from '../components/ui/Icon.vue';
+import Button from '../components/ui/Button.vue';
+import RequestPermissionModal from '../components/RequestPermissionModal.vue';
+import isPWA from '../utils/validations';
 
 export default {
   name: 'Index',
-  components: { IndexForm, Icon },
+  components: {
+    IndexForm,
+    Icon,
+    RequestPermissionModal,
+    Button,
+  },
+  data() {
+    return {
+      rpmModalState: false,
+    };
+  },
+  methods: {
+    openModal() {
+      this.rpmModalState = true;
+    },
+  },
+  computed: {
+    runsAsPWA() {
+      return isPWA();
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>
 .index{
   max-width: 540px;
   margin: 0 auto;
-  padding: 120px 0;
+  height: calc(100dvh - 80px);
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 60px;
   @media (max-width: 450px) {
     padding: 40px 20px;

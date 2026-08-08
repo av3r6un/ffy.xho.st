@@ -10,6 +10,7 @@ actions:
   share: Share
   download: Download
   open_video: Open video
+  make_shortcut: Create shortcut
 
 info:
   uploaded: Uploaded
@@ -35,3 +36,9 @@ languages:
 
 channel:
   subscribers: '0 subscribers | {n} subscriber | {n} subscribers'
+
+notifications:
+  permission:
+    title: 'Allow notifications to open videos from the Shortcut'
+    description: 'We will only notify you when your video is ready to watch.'
+    allow: 'Subscribe'

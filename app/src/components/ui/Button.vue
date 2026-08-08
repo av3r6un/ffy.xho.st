@@ -1,6 +1,7 @@
 <template>
-  <div class="button" :class="classes" @click="$emit(eventToEmit)">
-    <Icon :name="icon" v-if="icon"/>
+  <div class="button" :class="[classes, { disabled }]" @click="$emit(eventToEmit)"
+    :disabled="disabled" >
+    <Icon :name="icon" v-if="icon" :class="{ dark: hasAccent }"/>
     <span class="text" :class="{ visible: !icon }" v-if="text">
       {{ $te(text) ? $t(text) : text }}
     </span>
@@ -12,7 +13,7 @@ import Icon from './Icon.vue';
 export default {
   name: 'Button',
   components: { Icon },
-  emits: ['click', 'submit'],
+  emits: ['click', 'submit', 'void'],
   props: {
     text: {
       type: String,
@@ -34,16 +35,25 @@ export default {
       type: [String, Object],
       required: false,
     },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     eventToEmit() {
+      if (this.disabled) return 'void';
       return this.type === 'submit' ? 'submit' : 'click';
+    },
+    hasAccent() {
+      return this.classes?.includes('accent');
     },
   },
 };
 </script>
 <style lang="scss" scoped>
 .button{
+  user-select: none;
   border-radius: 32px;
   border: 1px solid rgba($white, .1);
   padding: 12px 24px;
@@ -53,6 +63,11 @@ export default {
   justify-content: center;
   font-size: 18px;
   cursor: pointer;
+  &:disabled,
+  &.disabled {
+    background: rgba($cyan, .6) !important;
+    cursor: not-allowed;
+  }
   @media (max-width: 680px) {
     font-size: 2.3vw;
     padding: 8px 16px;

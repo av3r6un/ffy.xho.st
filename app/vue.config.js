@@ -5,6 +5,7 @@ module.exports = defineConfig({
   transpileDependencies: true,
   pwa: {
     name: 'FFYouTube',
+    workboxPluginMode: 'InjectManifest',
     themeColor: '#00D5CB',
     msTileColor: '#1B1B1B',
     appleMobileWebAppCapable: 'yes',
@@ -76,13 +77,7 @@ module.exports = defineConfig({
       ],
     },
     workboxOptions: {
-      cleanupOutdatedCaches: true,
-      navigateFallback: '/index.html',
-      navigateFallbackDenylist: [
-        /^\/api\//,
-        /^\/auth\//,
-        /^\/proxy\//,
-      ],
+      swSrc: './src/service-worker.js',
     },
   },
   css: {

@@ -1,6 +1,6 @@
 <template>
   <PullRefresh />
-  <Header v-show="$route.name !== 'home'" />
+  <Header />
   <Spinner />
   <router-view v-show="!$store.getters.loading" />
 </template>

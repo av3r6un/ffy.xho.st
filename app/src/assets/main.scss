@@ -18,7 +18,8 @@ body,html{
     stroke: $cyan;
   }
 }
-.dark .m-icon{
+.dark .m-icon,
+.m-icon.dark{
   svg path,
   svg circle,
   svg ellipse {

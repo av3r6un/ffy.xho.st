@@ -32,4 +32,9 @@ class ShortcutKey(Base):
     
   @property
   def json(self):
-    return dict(id=self.id, user_uid=self.user_uid, secret_hash=self.secret_hash, last_used_at=self.lua, revoked_at=self.ra)
+    return dict(
+      id=self.id,
+      name=self.name,
+      last_used_at=self.lua,
+      revoked_at=self.ra,
+    )

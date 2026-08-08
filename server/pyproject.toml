@@ -16,4 +16,5 @@ dependencies = [
     "pyjwt>=2.13.0",
     "yt-dlp[default]>=2026.7.4",
     "sqlalchemy[async]>=2.0.51",
+    "pywebpush>=2.4.0",
 ]
