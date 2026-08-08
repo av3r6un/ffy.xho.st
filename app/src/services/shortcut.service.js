@@ -1,7 +1,7 @@
 import api from './axios.service';
 
 class ShortcutService {
-  static installUrl = 'https://www.icloud.com/shortcuts/7f8d4c63522749b2986c24728c5014c0';
+  static installUrl = 'https://www.icloud.com/shortcuts/6b8a026b063145d6955dc07875b9c41f';
 
   static async issue(name = 'Apple Shortcut') {
     const response = await api.post('/shortcuts', { name });
