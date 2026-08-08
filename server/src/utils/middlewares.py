@@ -93,6 +93,7 @@ async def jwt_middleware(req: Request, handler, *args, **kwargs):
       user = User(payload['sub'])
       await user.save(session)
     user.last_seen_at = dt.now()
+    user.language = req.cookies.get('locale', 'en')
     req['current_user'] = user
     
   except ExpiredSignatureError: raise JSRError('token_expired')

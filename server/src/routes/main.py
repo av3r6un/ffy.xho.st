@@ -24,7 +24,7 @@ async def health(_: Request, *args, **kwargs):
 @main.get('/{path:.*}')
 async def static_app(req: Request, *args, **kwargs):
   first_segment = req.match_info.get('path', '').partition('/')[0]
-  if first_segment in {'api', 'auth', 'proxy', 'health'}:
+  if first_segment in {'api', 'auth', 'proxy', 'health', 'shortcut'}:
     raise web.HTTPNotFound(text='Route not found')
 
   static_root = Path(

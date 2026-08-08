@@ -15,17 +15,17 @@ class PushSubscription(Base):
   id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
   user_uid: Mapped[str] = mapped_column(String(6), ForeignKey('users.uid'), nullable=False)
   
-  endpoint: Mapped[str] = mapped_column(String(255), nullable=False)
+  endpoint: Mapped[str] = mapped_column(String(512), nullable=False)
   p256dh: Mapped[str] = mapped_column(String(255), nullable=False)
   auth: Mapped[str] = mapped_column(String(255), nullable=False)
   
   user_agent: Mapped[str] = mapped_column(String(255), nullable=True)
   revoked_at: Mapped[dt] = mapped_column(DateTime, nullable=True)
 
-  def __init__(self, user_uid: str, endpoint, p256h, auth, user_agent=None, **kwargs) -> None:
+  def __init__(self, user_uid: str, endpoint, p256dh, auth, user_agent=None, **kwargs) -> None:
     self.user_uid = user_uid
     self.endpoint = endpoint
-    self.p256dh = p256h
+    self.p256dh = p256dh
     self.auth = auth
     self.user_agent = user_agent
 

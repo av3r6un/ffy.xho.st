@@ -10,6 +10,7 @@ from src.models import Metadata, VideoSession
 from src.models.base import Status
 
 from .metadata import MetadataService
+from .notification import NotificationService
 from .playback import PlaybackTokenService
 
 
@@ -204,13 +205,36 @@ class SessionService:
         media = await asyncio.to_thread(youtube.find, video_id)
         api_response = dict(**media.json, formats=media.formats.json)
         metadata_uid = await MetadataService.upsert(session, api_response)
-        await cls.mark_ready(session, session_uid, metadata_uid)
+        video_session = await cls.mark_ready(session, session_uid, metadata_uid)
         await session.commit()
+        try:
+          await NotificationService.notify_session(
+            session,
+            video_session.user_uid,
+            video_session.uid,
+            Status.READY,
+            api_response.get('title'),
+          )
+        except Exception:
+          logging.exception('Unable to notify ready session %s', session_uid)
       except asyncio.CancelledError:
         await session.rollback()
         raise
       except Exception:
         await session.rollback()
         logging.exception('Unable to prepare video %s', video_id)
-        await cls.mark_failed(session, session_uid, 'Unable to prepare video.')
+        video_session = await cls.mark_failed(
+          session,
+          session_uid,
+          'Unable to prepare video.',
+        )
         await session.commit()
+        try:
+          await NotificationService.notify_session(
+            session,
+            video_session.user_uid,
+            video_session.uid,
+            Status.FAILED,
+          )
+        except Exception:
+          logging.exception('Unable to notify failed session %s', session_uid)

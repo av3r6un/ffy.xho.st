@@ -11,7 +11,7 @@ from src.models import *
 import sys
 import os
 
-load_dotenv('server/.env')
+load_dotenv('.env')
 config = context.config
 
 if config.config_file_name is not None:

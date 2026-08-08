@@ -241,6 +241,7 @@ export default {
   }
   &_chapters{
     width: 35%;
+    align-self: flex-start;
     @media (max-width: 680px) {
       width: 100%;
     }
