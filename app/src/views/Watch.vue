@@ -65,10 +65,38 @@ export default {
     };
   },
   methods: {
+    openSession(uid) {
+      if (!uid) {
+        this.$router.replace('/');
+        return;
+      }
+      if (uid === this.sessionUid) return;
+
+      if (this.retryTimer) window.clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+      try {
+        this.player?.api('destroy');
+      } catch (error) {
+        // Playerjs versions without destroy are removed with the DOM node below.
+      }
+      this.player = null;
+      this.proxyObserver?.disconnect();
+      this.proxyObserver = null;
+      this.sessionUid = uid;
+      this.videoId = null;
+      this.playbackToken = null;
+      this.info = null;
+      this.selectedFormat = null;
+      this.error = null;
+      this.canRetry = false;
+      this.fetchVideo();
+    },
     async fetchVideo() {
+      const requestedSession = this.sessionUid;
       this.$store.commit('setLoading', true);
       try {
-        const videoSession = await this.backend.get(`/sessions/${this.sessionUid}`);
+        const videoSession = await this.backend.get(`/sessions/${requestedSession}`);
+        if (requestedSession !== this.sessionUid) return;
         if (videoSession.status === 'pending') {
           this.retryTimer = window.setTimeout(this.fetchVideo, 1500);
           return;
@@ -201,13 +229,13 @@ export default {
       })} MB`;
     },
   },
-  mounted() {
-    this.sessionUid = this.$route.query.session;
-    if (!this.sessionUid) {
-      this.$router.replace('/');
-      return;
-    }
-    this.fetchVideo();
+  watch: {
+    '$route.query.session': {
+      immediate: true,
+      handler(uid) {
+        this.openSession(uid);
+      },
+    },
   },
   beforeUnmount() {
     if (this.retryTimer) window.clearTimeout(this.retryTimer);
